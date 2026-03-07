@@ -158,14 +158,13 @@ static std::string llm_call(const std::string& prompt, const LLMRankConfig& cfg)
 }
 
 static double parse_score(const std::string& s) {
-    // find first number in string
-    for (size_t i = 0; i < s.size(); ++i) {
-        if (std::isdigit((unsigned char)s[i])) {
-            double v = std::stod(s.substr(i));
-            return std::max(0.0, std::min(10.0, v)) / 10.0;
-        }
-    }
-    return 0.5;
+    // scan from end to find last number (avoids grabbing preamble digits)
+    size_t last = std::string::npos;
+    for (size_t i = 0; i < s.size(); ++i)
+        if (std::isdigit((unsigned char)s[i])) last = i;
+    if (last == std::string::npos) return 0.5;
+    double v = std::stod(s.substr(last));
+    return std::max(0.0, std::min(10.0, v)) / 10.0;
 }
 
 static void assign_ranks(std::vector<RankResult>& results) {
